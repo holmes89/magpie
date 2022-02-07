@@ -1,0 +1,2 @@
+# magpie
+Storage API
