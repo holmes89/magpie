@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -85,11 +87,11 @@ func (h *resourceHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := lib.Resource{
-		ID:        ksuid.New().String(),
-		Name:      req.Name,
-		Meta:      req.Meta,
-		Type:      resource,
-		CreatedAt: time.Now().UTC(),
+		ResourceID: ksuid.New().String(),
+		Name:       req.Name,
+		Meta:       req.Meta,
+		Type:       strings.ToLower(resource),
+		CreatedAt:  time.Now().UTC(),
 	}
 
 	if err := h.service.Create(ctx, res); err != nil {
@@ -101,7 +103,7 @@ func (h *resourceHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func makeError(w http.ResponseWriter, code int, message string, method string) {
-	fmt.Printf("HTTP Error: %d - %s - %s", code, method, message)
+	log.Printf("HTTP Error: %d - %s - %s", code, method, message)
 	http.Error(w, message, code)
 }
 
