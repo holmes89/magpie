@@ -17,7 +17,6 @@ variable "redirect_all_requests_to" {
   default     = ""
 }
 
-
 variable "allow_headers" {
   description = "Allow headers"
   type        = list(string)
