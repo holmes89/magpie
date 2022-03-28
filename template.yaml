@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  MagpieApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Dev
+      Name: MagpieApi
+      Cors:
+        AllowMethods: "'OPTIONS,GET,POST,PUT,DELETE'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+        AllowOrigin: "'*'"
+
+  MagpieFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: api
+      Runtime: go1.x
+      Architectures:
+        - x86_64
+      Tracing: Active
+      Events:
+        CatchAll:
+          Type: Api 
+          Properties:
+            Path: /{proxy+}
+            RestApiId: !Ref MagpieApi
+            Method: ANY

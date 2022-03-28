@@ -26,7 +26,7 @@ type resourceHandler struct {
 	service ResourceService
 }
 
-func MakeV1ResourceHandler(mr *mux.Router, service ResourceService) http.Handler {
+func MakeV1ResourceHandler(mr *mux.Router, service ResourceService) {
 
 	r := mr.PathPrefix("/r").Subrouter()
 
@@ -37,9 +37,8 @@ func MakeV1ResourceHandler(mr *mux.Router, service ResourceService) http.Handler
 	r.HandleFunc("/{resource}/{id}", h.Find).Methods("GET", "OPTIONS")
 	r.HandleFunc("/{resource}", h.FindAll).Methods("GET", "OPTIONS")
 	r.HandleFunc("/{resource}", h.Create).Methods("POST")
-
-	return r
 }
+
 func (h *resourceHandler) Find(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	vars := mux.Vars(r)
