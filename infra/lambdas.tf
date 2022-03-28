@@ -55,7 +55,7 @@ data "aws_iam_policy_document" "lambda" { #Should I break it up?
       "dynamodb:Update*",
       "dynamodb:PutItem"
     ]
-    resources = ["arn:aws:dynamodb:${data.aws_region.current.name}:*:table/${aws_dynamodb_table.ibis_table.name}"]
+    resources = ["arn:aws:dynamodb:${data.aws_region.current.name}:*:table/${aws_dynamodb_table.magpie_table.name}"]
   }
 
 }
@@ -98,7 +98,7 @@ resource "aws_lambda_function" "api" {
 
   environment {
     variables = {
-      DYNAMODB_TABLE = aws_dynamodb_table.ibis_table.name
+      DYNAMODB_TABLE = aws_dynamodb_table.magpie_table.name
     }
   }
   depends_on = [aws_cloudwatch_log_group.api]
