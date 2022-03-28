@@ -1,0 +1,40 @@
+name: Magpie
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        default: 'main'
+  push:
+    branches:
+      - main
+permissions:
+      id-token: write
+      contents: write    # This is required for actions/checkout@v1
+jobs:
+  build-api:
+    name: Build and Deploy API consumer
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.13
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+    - name: Build binaries
+      run: go build -o api lambda/api/main.go
+    - name: Zip binaries
+      run: zip api.zip api 
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+        role-to-assume: arn:aws:iam::412092673045:role/jholmes-prod-magpie-magpie
+        role-session-name: apideployment
+        role-duration-seconds: 1200
+        aws-region: us-east-2
+    - name: Update Lambda
+      run: aws lambda update-function-code --function-name jholmes-prod-magpie-magpie-lambda-api --region us-east-2 --zip-file fileb://api.zip   
