@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/holmes89/magpie/lib"
 	v1 "github.com/holmes89/magpie/lib/handlers/rest/v1"
@@ -23,6 +24,7 @@ func NewService(svc v1.SiteService) v1.SiteService {
 
 func (s *service) Create(ctx context.Context, si lib.Site) error {
 	site := si
+	fmt.Println("fetching site information")
 	title, sites, err := analyze(site.URL)
 	if err != nil {
 		fmt.Printf("Error analyzing page: %s %s", site.URL, err)
@@ -38,6 +40,7 @@ type subsite struct {
 	Title string `json:"title" dynamodbav:"title"`
 }
 
+// https://flaviocopes.com/golang-web-crawler/
 func analyze(url string) (string, []subsite, error) {
 	page, err := parse(url)
 	if err != nil {
@@ -47,8 +50,11 @@ func analyze(url string) (string, []subsite, error) {
 	title := pageTitle(page)
 
 	subsites := []subsite{}
-	links := pageLinks(page)
+	links := pageLinks([]string{}, page)
 	for _, link := range links {
+		if !strings.HasPrefix(link, "http") {
+			continue
+		}
 		t, err := pageTitleByURL(link)
 		if err != nil {
 			fmt.Printf("Error getting page title for %s %s\n", link, err)
@@ -86,28 +92,39 @@ func pageTitle(n *html.Node) string {
 	return title
 }
 
-func pageLinks(n *html.Node) []string {
-	links := []string{}
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		if n.Type == html.ElementNode && n.Data == "a" {
-			for _, a := range n.Attr {
-				if a.Key == "href" {
+func pageLinks(links []string, n *html.Node) []string {
+	if n.Type == html.ElementNode && n.Data == "a" {
+		for _, a := range n.Attr {
+			if a.Key == "href" {
+				if !sliceContains(links, a.Val) {
 					links = append(links, a.Val)
 				}
 			}
 		}
 	}
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		links = pageLinks(links, c)
+	}
 	return links
+}
+
+func sliceContains(slice []string, value string) bool {
+	for _, v := range slice {
+		if v == value {
+			return true
+		}
+	}
+	return false
 }
 
 func parse(url string) (*html.Node, error) {
 	r, err := http.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot get page")
+		return nil, fmt.Errorf("cannot get page")
 	}
 	b, err := html.Parse(r.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot parse page")
+		return nil, fmt.Errorf("cannot parse page")
 	}
 	return b, err
 }

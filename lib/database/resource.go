@@ -31,7 +31,7 @@ func (conn *Conn) Get(ctx context.Context, id string) (lib.Site, error) {
 	resp, err := conn.db.GetItem(ctx, params)
 	if err != nil {
 		if errors.As(err, &notfound) {
-			log.Println("no devices found")
+			log.Println("no resources found")
 			return lib.Site{}, nil
 		}
 		log.Println("unable to find Site", err)
@@ -57,26 +57,31 @@ func (conn *Conn) GetAll(ctx context.Context) ([]lib.Site, error) {
 		ScanIndexForward: aws.Bool(false),
 	}
 
+	sites := make([]lib.Site, 0)
 	resp, err := conn.db.Query(ctx, params)
 	if err != nil {
 		if errors.As(err, &notfound) {
-			log.Println("no log found")
-			return nil, nil
+			log.Println("no resources found")
+			return sites, nil
 		}
 		log.Println("unable to fetch Sites", err)
-		return nil, errors.New("unable to fetch all Sites")
+		return sites, errors.New("unable to fetch all Sites")
 	}
-	var sites []lib.Site
 	if err := attributevalue.UnmarshalListOfMaps(resp.Items, &sites); err != nil {
 		log.Println("unable to unmarshal Sites", err)
-		return nil, errors.New("unable to fetch all Sites")
+		return sites, errors.New("unable to fetch all Sites")
 	}
-	return sites, nil
+	r := make([]lib.Site, 0)
+	for _, s := range sites {
+		s.Meta = nil
+		r = append(r, s)
+	}
+	return r, nil
 }
 
 func (conn *Conn) Create(ctx context.Context, r lib.Site) error {
 	site := r
-	site.ID = "site"
+	site.Type = "site"
 	rs, err := attributevalue.MarshalMap(site)
 	if err != nil {
 		log.Println("unable to marshal Site message", err)

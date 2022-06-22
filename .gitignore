@@ -17,4 +17,5 @@
 
 openapi-generator-cli.jar
 .openapi-generator
+.vscode
 .DS_Store

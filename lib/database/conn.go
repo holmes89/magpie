@@ -44,9 +44,9 @@ func loadConfig() (aws.Config, error) {
 	if conn := os.Getenv("DYNAMODB_ENDPOINT"); conn != "" {
 		log.Println("using local database connection")
 		return config.LoadDefaultConfig(context.TODO(),
-			config.WithRegion(("us-east-2")),
+			config.WithRegion(("us-east-1")),
 			config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-				return aws.Endpoint{URL: "http://dynamo:8000", SigningRegion: "us-east-2"}, nil
+				return aws.Endpoint{URL: "http://dynamo:8000", SigningRegion: "us-east-1"}, nil
 			})))
 	}
 	return config.LoadDefaultConfig(context.Background())

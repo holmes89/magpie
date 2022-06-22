@@ -16,11 +16,16 @@ Resources:
   MagpieFunction:
     Type: AWS::Serverless::Function 
     Properties:
+      Timeout: 30
       Handler: api
       Runtime: go1.x
       Architectures:
         - x86_64
       Tracing: Active
+      Policies: AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          DYNAMODB_ENDPOINT: "http://dynamo:8000"
       Events:
         CatchAll:
           Type: Api 

@@ -15,6 +15,22 @@ build: clean lambda
 run: build
 	sam local start-api --docker-network sam-backend --profile default -p 8080
 
+.PHONY: create-table
+create-table:
+	AWS_PAGER="" aws dynamodb create-table --cli-input-json file://create-table.json --endpoint-url http://localhost:8000
+	sleep 2
+
+.PHONY: start-dynamodb
+start-dynamodb:
+	docker-compose up -d dynamo
+	sleep 2
+
+.PHONY: init-db
+init-db: create-table
+
+.PHONY: deps
+deps: start-dynamodb init-db
+
 api: ./lambda/api/main.go
 	go build -o api ./lambda/api/main.go
 

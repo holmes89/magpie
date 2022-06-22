@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/holmes89/magpie/lib/database"
 	v1 "github.com/holmes89/magpie/lib/handlers/rest/v1"
+	"github.com/holmes89/magpie/lib/resource"
 )
 
 var (
@@ -23,7 +24,8 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 
 func setup() {
 	router := mux.NewRouter()
-	v1.MakeV1SiteHandler(router, database.NewConnection())
+	svc := resource.NewService(database.NewConnection())
+	v1.MakeV1SiteHandler(router, svc)
 	muxAdapter = gorillamux.New(router)
 }
 

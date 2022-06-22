@@ -10,5 +10,5 @@ type Site struct {
 	Name      string                 `json:"name" dynamodbav:"name"`
 	URL       string                 `json:"url" dynamodbav:"url"`
 	CreatedAt time.Time              `json:"created_at" dynamodbav:"created_at"`
-	Meta      map[string]interface{} `json:"meta_data" dynamodbav:"meta_data"`
+	Meta      map[string]interface{} `json:"meta_data,omitempty" dynamodbav:"meta_data"`
 }

@@ -1,0 +1,15 @@
+{
+    "TableName": "magpie",
+    "KeySchema": [
+      { "AttributeName": "ID", "KeyType": "HASH" },
+      { "AttributeName": "SK", "KeyType": "RANGE" }
+    ],
+    "AttributeDefinitions": [
+      { "AttributeName": "ID", "AttributeType": "S" },
+      { "AttributeName": "SK", "AttributeType": "S" }
+    ],
+    "ProvisionedThroughput": {
+      "ReadCapacityUnits": 25,
+      "WriteCapacityUnits": 25
+    }
+}

@@ -1,0 +1,14 @@
+version: '2.3'
+
+services:
+  dynamo:
+    image: amazon/dynamodb-local
+    restart: always
+    networks:
+      - backend
+    ports:
+      - 8000:8000
+
+networks:
+  backend:
+    name: sam-backend
