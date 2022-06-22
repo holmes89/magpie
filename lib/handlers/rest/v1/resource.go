@@ -15,10 +15,18 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-type SiteService interface {
-	Get(context.Context, string) (lib.Site, error)
-	GetAll(context.Context, string) ([]lib.Site, error)
+type SiteFactory interface {
 	Create(context.Context, lib.Site) error
+}
+
+type SiteRepository interface {
+	Get(ctx context.Context, id string) (lib.Site, error)
+	GetAll(ctx context.Context) ([]lib.Site, error)
+}
+
+type SiteService interface {
+	SiteFactory
+	SiteRepository
 }
 
 type siteHandler struct {
@@ -54,10 +62,8 @@ func (h *siteHandler) Find(w http.ResponseWriter, r *http.Request) {
 
 func (h *siteHandler) FindAll(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	resource := vars["resource"]
 
-	res, err := h.service.GetAll(ctx, resource)
+	res, err := h.service.GetAll(ctx)
 	if err != nil {
 		makeError(w, http.StatusBadRequest, "unable to find results", "get")
 		return
@@ -73,8 +79,7 @@ func (h *siteHandler) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	req := struct {
-		Name string                 `json:"name"`
-		Meta map[string]interface{} `json:"meta_data"`
+		URL string `json:"url"`
 	}{}
 	if err := json.Unmarshal(b, &req); err != nil {
 		fmt.Println("unable to unmarshall resource")
@@ -82,10 +87,10 @@ func (h *siteHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := lib.Site{
-		ResourceID: ksuid.New().String(),
-		Name:       req.Name,
-		Meta:       req.Meta,
-		CreatedAt:  time.Now().UTC(),
+		ID:        ksuid.New().String(),
+		Name:      req.URL,
+		URL:       req.URL,
+		CreatedAt: time.Now().UTC(),
 	}
 
 	if err := h.service.Create(ctx, res); err != nil {

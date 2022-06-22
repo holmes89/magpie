@@ -17,3 +17,4 @@
 
 openapi-generator-cli.jar
 .openapi-generator
+.DS_Store

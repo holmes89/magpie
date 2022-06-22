@@ -18,12 +18,6 @@ var (
 	notfound *types.ResourceNotFoundException
 )
 
-type Site struct {
-	ID string
-	SK string
-	lib.Site
-}
-
 func (conn *Conn) Get(ctx context.Context, id string) (lib.Site, error) {
 	params := &dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
@@ -33,7 +27,7 @@ func (conn *Conn) Get(ctx context.Context, id string) (lib.Site, error) {
 		},
 	}
 
-	rs := Site{}
+	rs := lib.Site{}
 	resp, err := conn.db.GetItem(ctx, params)
 	if err != nil {
 		if errors.As(err, &notfound) {
@@ -49,10 +43,10 @@ func (conn *Conn) Get(ctx context.Context, id string) (lib.Site, error) {
 		return lib.Site{}, errors.New("failed to scan Site")
 	}
 
-	return rs.Site, nil
+	return rs, nil
 }
 
-func (conn *Conn) GetAll(ctx context.Context, r string) ([]lib.Site, error) {
+func (conn *Conn) GetAll(ctx context.Context) ([]lib.Site, error) {
 	params := &dynamodb.QueryInput{
 		TableName:              aws.String(tableName),
 		Limit:                  aws.Int32(10),
@@ -72,30 +66,18 @@ func (conn *Conn) GetAll(ctx context.Context, r string) ([]lib.Site, error) {
 		log.Println("unable to fetch Sites", err)
 		return nil, errors.New("unable to fetch all Sites")
 	}
-	var SiteEntities []Site
-	if err := attributevalue.UnmarshalListOfMaps(resp.Items, &SiteEntities); err != nil {
+	var sites []lib.Site
+	if err := attributevalue.UnmarshalListOfMaps(resp.Items, &sites); err != nil {
 		log.Println("unable to unmarshal Sites", err)
 		return nil, errors.New("unable to fetch all Sites")
 	}
-
-	Sites := make([]lib.Site, 0)
-	for _, Site := range SiteEntities {
-		Sites = append(Sites, Site.Site)
-	}
-
-	return Sites, nil
-}
-
-func convertSite(r lib.Site) Site {
-	return Site{
-		ID:   "stie",
-		SK:   r.ResourceID,
-		Site: r,
-	}
+	return sites, nil
 }
 
 func (conn *Conn) Create(ctx context.Context, r lib.Site) error {
-	rs, err := attributevalue.MarshalMap(convertSite(r))
+	site := r
+	site.ID = "site"
+	rs, err := attributevalue.MarshalMap(site)
 	if err != nil {
 		log.Println("unable to marshal Site message", err)
 		return errors.New("failed to insert Site")
