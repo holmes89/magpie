@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -16,36 +15,35 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-type ResourceService interface {
-	Get(context.Context, string, string) (lib.Resource, error)
-	GetAll(context.Context, string) ([]lib.Resource, error)
-	Create(context.Context, lib.Resource) error
+type SiteService interface {
+	Get(context.Context, string) (lib.Site, error)
+	GetAll(context.Context, string) ([]lib.Site, error)
+	Create(context.Context, lib.Site) error
 }
 
-type resourceHandler struct {
-	service ResourceService
+type siteHandler struct {
+	service SiteService
 }
 
-func MakeV1ResourceHandler(mr *mux.Router, service ResourceService) {
+func MakeV1SiteHandler(mr *mux.Router, service SiteService) {
 
 	r := mr.PathPrefix("/r").Subrouter()
 
-	h := &resourceHandler{
+	h := &siteHandler{
 		service: service,
 	}
 
-	r.HandleFunc("/{resource}/{id}", h.Find).Methods("GET", "OPTIONS")
-	r.HandleFunc("/{resource}", h.FindAll).Methods("GET", "OPTIONS")
-	r.HandleFunc("/{resource}", h.Create).Methods("POST")
+	r.HandleFunc("/{id}", h.Find).Methods("GET", "OPTIONS")
+	r.HandleFunc("", h.FindAll).Methods("GET", "OPTIONS")
+	r.HandleFunc("", h.Create).Methods("POST")
 }
 
-func (h *resourceHandler) Find(w http.ResponseWriter, r *http.Request) {
+func (h *siteHandler) Find(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	vars := mux.Vars(r)
-	resource := vars["resource"]
 	id := vars["id"]
 
-	res, err := h.service.Get(ctx, resource, id)
+	res, err := h.service.Get(ctx, id)
 	if err != nil {
 		makeError(w, http.StatusBadRequest, "unable to find results", "get")
 		return
@@ -54,7 +52,7 @@ func (h *resourceHandler) Find(w http.ResponseWriter, r *http.Request) {
 	encodeResponse(r.Context(), w, res)
 }
 
-func (h *resourceHandler) FindAll(w http.ResponseWriter, r *http.Request) {
+func (h *siteHandler) FindAll(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	vars := mux.Vars(r)
 	resource := vars["resource"]
@@ -68,10 +66,8 @@ func (h *resourceHandler) FindAll(w http.ResponseWriter, r *http.Request) {
 	encodeResponse(r.Context(), w, res)
 }
 
-func (h *resourceHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *siteHandler) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	resource := vars["resource"]
 
 	b, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -85,11 +81,10 @@ func (h *resourceHandler) Create(w http.ResponseWriter, r *http.Request) {
 		makeError(w, http.StatusBadRequest, "unable to unmarshall resource", "post")
 	}
 
-	res := lib.Resource{
+	res := lib.Site{
 		ResourceID: ksuid.New().String(),
 		Name:       req.Name,
 		Meta:       req.Meta,
-		Type:       strings.ToLower(resource),
 		CreatedAt:  time.Now().UTC(),
 	}
 

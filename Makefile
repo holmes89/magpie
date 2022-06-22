@@ -13,7 +13,7 @@ build: clean lambda
 
 .PHONY: run
 run: build
-	sam local start-api --docker-network emcy-sam-backend --profile default -p 8080
+	sam local start-api --docker-network sam-backend --profile default -p 8080
 
 api: ./lambda/api/main.go
 	go build -o api ./lambda/api/main.go
@@ -27,3 +27,8 @@ lint:
 
 test:
 	go test ./...
+
+.PHONY: gen-server
+gen-server:
+	rm -f ./backend/internal/handlers/rest/v1/*.go
+	java -jar ./openapi-generator-cli.jar generate -i ./api/openapi.yaml -g go-server --model-package models --package-name v1 --ignore-file-override false --additional-properties=sourceFolder=./backend/internal/handlers/rest/v1 --additional-properties=featureCORS=true

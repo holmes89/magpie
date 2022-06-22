@@ -23,7 +23,7 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 
 func setup() {
 	router := mux.NewRouter()
-	v1.MakeV1ResourceHandler(router, database.NewConnection())
+	v1.MakeV1SiteHandler(router, database.NewConnection())
 	muxAdapter = gorillamux.New(router)
 }
 
